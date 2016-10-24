@@ -1,0 +1,259 @@
+<html>
+	<head>
+		<style>
+			body{
+				display: flex;
+				background-color: #eaeaea;
+			}
+			.canvasArea{
+				margin:auto;
+				width:500px;
+				height:500px;
+				background-color: #eee;
+				position:relative;
+				border: 5px solid #fff;
+				box-shadow: 0px 0px 10px #999;
+				display : flex;
+			}
+			.snake{
+				position:absolute;
+				left:0;
+				top:0;
+				width:25px;
+				height:25px;
+				background-color: #999;
+				transition: background-color 100ms;
+			}
+			.food{
+				position:absolute;
+				width: 25px;
+				height: 25px;
+				border-radius : 100%;
+				background-color: #6700FF;
+				opacity: 0.5;
+				-webkit-animation:pulse 800ms ease-out 300ms infinite;
+				animation:pulse 800ms ease-out 300ms infinite;
+			}
+			@keyframes pulse{
+				50%{
+					opacity:0.3;
+				}
+				100%{
+					opacity:0.5;
+				}
+			}
+			@-webkit-keyframes pulse{
+				50%{
+					opacity:0.3;
+				}
+				100%{
+					opacity:0.5;
+				}
+			}
+			.wall{
+				margin:auto;
+				height :40px;
+				width : 40px;
+				/*background-color : #000;*/
+				opacity : 0.5;
+			}
+			score{
+				position : absolute;
+				bottom : -60px;
+				left : 50%;
+				margin-left : -87.5px;
+				font-size : 50px;
+				font-family: calibri;
+				color : #666;
+			}
+			score:before {
+				content : "Score : ";
+				/*position : absolute;
+				top : 0px;
+				left : 0px;*/
+			}
+		</style>
+	</head>
+	<body>
+		<div class="canvasArea">
+			<snake>
+				<div class="snake snake-head" id="snakeHead"></div>
+			</snake>
+			<div class="food" id="food"></div>
+			<div class="spclfood" id="spclfood">
+				<div></div>
+			</div>
+			<div class='wall'></div>
+			<score></score>
+		</div>
+		
+		<script src="js/jquery.js"></script>
+		<script>
+			var elem = $('#snakeHead');
+			var arr = [elem];
+			var food = $('#food');
+			var dirToMove = 'right';
+			var wallHit = false;
+			var level = 1;
+			var levelSpeed = 200;
+			var counter = 0;
+			var bodyCount = 0;
+			var score = 0;
+			
+			$('score').text(score);
+			
+			var moveRight = function(arr){
+				var con = 25;
+				for(var i=0;i<arr.length;i++){
+					part = arr[i];
+					var toLeft = part[0].offsetLeft;
+					if(toLeft>=0&&toLeft<=450){
+						var pos= part.css("left");
+						pos=='auto'?pos='0px':true;
+						pos = pos.split('px')[0];
+						pos = eval(pos)+con;
+						part.css({left:pos+'px','background-color':'#4ca'});
+					}else{
+						wallHit = true;
+					}
+					//con = con-25;
+				}
+			};
+			var moveLeft = function(arr){
+				var con = 25;
+				for(var i=0;i<arr.length;i++){
+					part = arr[i];
+					var toLeft = part[0].offsetLeft;
+					if(toLeft>=25&&toLeft<=475){
+						var pos= part.css("left");
+						pos=='auto'?pos='0px':true;
+						pos = pos.split('px')[0];
+						pos = eval(pos)-con;
+						part.css({left:pos+'px','background-color':'#39c'});
+					}else{
+						wallHit = true;
+					}
+					//con = con+25;
+				}
+			};
+			var moveTop = function(arr){
+				var con = 25;
+				for(var i=0;i<arr.length;i++){
+					part = arr[i];
+					var toTop = part[0].offsetTop;
+					if(toTop>=25&&toTop<=475){
+						var pos= part.css("top");
+						pos=='auto'?pos='0px':true;
+						pos = pos.split('px')[0];
+						pos = eval(pos)-con;
+						part.css({top:pos+'px','background-color':'#E7C869'});
+					}else{
+						wallHit = true;
+					}
+					//con = con+25;
+				}
+			};
+			var moveBottom = function(arr){
+				var con = 25;
+				for(var i=0;i<arr.length;i++){
+					part = arr[i];
+					var toTop = part[0].offsetTop;
+					if(toTop>=0&&toTop<=450){
+						var pos= part.css("top");
+						pos=='auto'?pos='0px':true;
+						pos = pos.split('px')[0];
+						pos = eval(pos)+con;
+						part.css({top:pos+'px','background-color':'#CC334A'});
+					}else{
+						wallHit = true;
+					}
+					// = con-25;
+				}
+			};
+			$("body").keydown(function(e) {
+				if(e.keyCode==39){
+					dirToMove = 'right';
+				}else if(e.keyCode==40){
+					dirToMove = 'bottom';
+				}else if(e.keyCode==38){
+					dirToMove = 'top';
+				}else if(e.keyCode==37){
+					dirToMove = 'left';
+				}
+			});
+			var move = function(part){
+				if(dirToMove=='left'){
+					moveLeft(part);
+				}else if(dirToMove=='right'){
+					moveRight(part);
+				}else if(dirToMove=='top'){
+					moveTop(part);
+				}else if(dirToMove=='bottom'){
+					moveBottom(part);
+				}
+			};
+			var giveFood = function(){
+				var leftPosFood = Math.floor((Math.random()*19)+1) * 25;
+				var topPosFood = Math.floor((Math.random()*19)+1) * 25;
+				food.css({left:leftPosFood+'px',top:topPosFood+'px'});
+			};
+			var giveSpecialFood = function(){
+				
+			};
+			var didEat = function(){
+				var hit = false;
+				var currFoodLeft = food[0].offsetLeft;
+				var currFoodTop = food[0].offsetTop;
+				var currSnakeLeft = elem[0].offsetLeft;
+				var currSnakeTop = elem[0].offsetTop;
+				if(((currFoodLeft-currSnakeLeft)==0)&&((currFoodTop-currSnakeTop)==0))
+					hit = true;
+				return hit;
+			};
+			var levelUp = function(){
+				
+			};
+			var incScore = function(){
+				score = score + (level*20);
+				$('score').text(score);
+				$('score').css({'margin-left':-($('score').outerWidth()/2)});
+			};
+			var keepMoving = function(){
+				move(arr);
+				if(didEat()){
+					counter++;
+					giveFood();
+					incScore();
+					if(counter == 5){
+						if(levelSpeed>=95)
+							levelSpeed = levelSpeed-35;
+						level++;
+						levelUp();
+						giveSpecialFood();
+						counter = 0;
+					}
+				}
+				if(!wallHit){
+					setTimeout(function(){
+						keepMoving();
+					},levelSpeed);
+				}else{
+					stopGame();
+				}
+			}
+			var stopGame = function(){
+				var currSnakeLeft = elem[0].offsetLeft;
+				var currSnakeTop = elem[0].offsetTop;
+				elem.css({'background-color':'transparent'});
+				elem.append("<img src='assets/explosion.gif' id='explosion' style='width:50px;position: absolute;top: -35px;left: -13px;'>");
+				setTimeout(function(){
+						$('#explosion').hide();
+					},500);
+				//alert('GAME OVER');
+			};
+			giveFood();
+			keepMoving();
+			
+		</script>
+	</body>
+</html>
